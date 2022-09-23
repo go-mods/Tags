@@ -143,3 +143,25 @@ func TestExample(t *testing.T) {
 		}
 	}
 }
+
+func TestLookup(t *testing.T) {
+
+	type Employee struct {
+		Id   int    `json:"id" xml:"id"`
+		Name string `json:"name,string" xml:"name"`
+		Age  int    `json:"age,omitempty,int" xml:"age"`
+	}
+
+	if tags.Lookup(reflect.TypeOf(Employee{}).Field(0), "json") == nil {
+		t.Error("Lookup() got = nil")
+	}
+
+	if tags.Lookup(reflect.TypeOf(Employee{}).Field(1), "json") == nil {
+		t.Error("Lookup() got = nil")
+	}
+
+	if tags.Lookup(reflect.TypeOf(Employee{}).Field(1), "xml") == nil {
+		t.Error("Lookup() got = nil")
+	}
+
+}

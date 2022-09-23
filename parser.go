@@ -1,12 +1,25 @@
 package tags
 
 import (
+	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 )
 
 type parser struct {
 	Tags string
+}
+
+func Lookup(field reflect.StructField, key string) *Tag {
+	if value, ok := field.Tag.Lookup(key); ok {
+		tags, err := Parse(fmt.Sprintf("%s:\"%s\"", key, value))
+		if tags == nil || err != nil {
+			return nil
+		}
+		return tags[0]
+	}
+	return nil
 }
 
 func Parse(tags string) ([]*Tag, error) {
