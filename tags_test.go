@@ -1,6 +1,7 @@
 package tags_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-mods/tags"
 	"reflect"
@@ -94,10 +95,16 @@ func TestSimpleValue(t *testing.T) {
 				t.Errorf("Parse() got = %v, want %v", tgs[0].Key, test.name)
 			}
 			if test.options != nil {
-				if len(test.options) >= 1 && tgs[0].Options[0] != test.options[0] {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[0], test.options[0])
+				if len(test.options) >= 1 && tgs[0].Options[0].Key != test.options[0].Key {
+					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[0].Key, test.options[0].Key)
 				}
-				if len(test.options) >= 2 && tgs[0].Options[1] != test.options[1] {
+				if len(test.options) >= 1 && tgs[0].Options[0].Value != test.options[0].Value {
+					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[0].Value, test.options[0].Value)
+				}
+				if len(test.options) >= 2 && tgs[0].Options[1].Key != test.options[1].Key {
+					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[1], test.options[1])
+				}
+				if len(test.options) >= 2 && tgs[0].Options[1].Value != test.options[1].Value {
 					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[1], test.options[1])
 				}
 			}
@@ -119,9 +126,9 @@ func TestComplexTag(t *testing.T) {
 func TestExample(t *testing.T) {
 
 	type Employee struct {
-		Id   int    `json:"id" xml:"id"`
-		Name string `json:"name,string" xml:"name"`
-		Age  int    `json:"age,omitempty,int" xml:"age"`
+		Id   int    `json:"id" xml:"id" excel:"id"`
+		Name string `json:"name,string" xml:"name" excel:"name"`
+		Age  int    `json:"age,omitempty" xml:"age" excel:"column:age"`
 	}
 
 	// Loop throw all fields
@@ -132,15 +139,18 @@ func TestExample(t *testing.T) {
 		tag := field.Tag
 
 		// parse it
-		tags, err := tags.Parse(string(tag))
+		tgs, err := tags.Parse(string(tag))
 		if err != nil {
 			panic(err)
 		}
 
 		// iterate over all tags
-		for _, t := range tags {
-			fmt.Printf("tag: %+v\n", t)
+		fmt.Println(fmt.Sprintf("// Tags for field: %s", field.Name))
+		for _, t := range tgs {
+			out, _ := json.Marshal(t)
+			fmt.Println(string(out))
 		}
+		fmt.Println("")
 	}
 }
 
@@ -149,7 +159,7 @@ func TestLookup(t *testing.T) {
 	type Employee struct {
 		Id   int    `json:"id" xml:"id"`
 		Name string `json:"name,string" xml:"name"`
-		Age  int    `json:"age,omitempty,int" xml:"age"`
+		Age  int    `json:"age,omitempty" xml:"age"`
 	}
 
 	if tags.Lookup(reflect.TypeOf(Employee{}).Field(0), "json") == nil {

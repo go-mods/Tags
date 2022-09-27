@@ -39,7 +39,7 @@ func (p *parser) parse() ([]*Tag, error) {
 	// Split tags onto multiples tag
 	// ie: json:"id,omitempty" gorm:"embedded;embeddedPrefix:author_"
 	// to json:"id,omitempty" and gorm:"embedded;embeddedPrefix:author_"
-	regex := *regexp.MustCompile("(.*?):\"(.*?)\"")
+	regex := *regexp.MustCompile(`(.*?):"(.*?)"`)
 	matches := regex.FindAllStringSubmatch(p.Tags, -1)
 
 	// Loop throw all tags
@@ -55,6 +55,11 @@ func (p *parser) parse() ([]*Tag, error) {
 }
 
 func (p *parser) parseTag(tag string, key string, value string) (*Tag, error) {
+	// cleanup
+	tag = strings.TrimSpace(tag)
+	key = strings.TrimSpace(key)
+	value = strings.TrimSpace(value)
+
 	// Create the Tag to return
 	t := &Tag{
 		Tag:   tag,
@@ -74,9 +79,12 @@ func (p *parser) parseTag(tag string, key string, value string) (*Tag, error) {
 }
 
 func (p *parser) parseValue(value string) (name string, options []*Option, err error) {
+	// cleanup
+	value = strings.TrimSpace(value)
+
 	// value only have a name
 	// ie: id
-	regex := *regexp.MustCompile("^(\\w*)$")
+	regex := *regexp.MustCompile(`^(\w*)$`)
 	matches := regex.FindAllStringSubmatch(value, -1)
 	if len(matches) == 1 {
 		name = matches[0][1]
@@ -87,7 +95,7 @@ func (p *parser) parseValue(value string) (name string, options []*Option, err e
 	// ie: id,omitempty
 	// ie: id,omitempty,default
 	// ie: embedded;embeddedPrefix:author_
-	regex = *regexp.MustCompile("^(\\w*)[,;](.*)$")
+	regex = *regexp.MustCompile(`^(\w*)[,;](.*)$`)
 	matches = regex.FindAllStringSubmatch(value, -1)
 	if len(matches) == 1 {
 		name = matches[0][1]
@@ -102,9 +110,12 @@ func (p *parser) parseValue(value string) (name string, options []*Option, err e
 }
 
 func (p *parser) parseOptions(option string) (options []*Option, err error) {
+	// cleanup
+	option = strings.TrimSpace(option)
+
 	// option with only one key (no value)
 	// ie: omitempty from json:"id,omitempty"
-	regex := *regexp.MustCompile("^(\\w*)$")
+	regex := *regexp.MustCompile(`^(\w*)$`)
 	matches := regex.FindAllStringSubmatch(option, -1)
 	if len(matches) == 1 {
 		o := Option{
@@ -116,7 +127,7 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 
 	// option with only keys (no value)
 	// ie: omitempty,default from json:"id,omitempty,default"
-	regex = *regexp.MustCompile("^(\\w*),(\\w*)$")
+	regex = *regexp.MustCompile(`^(\w*),(\w*)$`)
 	matches = regex.FindAllStringSubmatch(option, -1)
 	if len(matches) == 1 {
 		for i := 1; i < len(matches[0]); i++ {
@@ -131,7 +142,7 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 	// option with keys and values
 	// ie: embeddedPrefix:author_ from gorm:"embedded;embeddedPrefix:author_"
 	// ie: OnUpdate:CASCADE,OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
-	regex = *regexp.MustCompile("^(\\w*):(.*)$")
+	regex = *regexp.MustCompile(`^(\w*):(.*)$`)
 	ops := strings.Split(option, ",")
 	for _, op := range ops {
 		matches = regex.FindAllStringSubmatch(op, -1)
