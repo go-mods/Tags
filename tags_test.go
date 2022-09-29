@@ -15,6 +15,7 @@ var simpleTagTest = []struct {
 }{
 	{"", "", ""},
 	{"json:\"id,omitempty\"", "json", "id,omitempty"},
+	{"json:\"-\"", "json", "-"},
 	{"gorm:\"embedded;embeddedPrefix:author_\"", "gorm", "embedded;embeddedPrefix:author_"},
 	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "gorm", "constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"},
 }

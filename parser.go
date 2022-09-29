@@ -106,6 +106,10 @@ func (p *parser) parseValue(value string) (name string, options []*Option, err e
 	// If no value is found then this is an option
 	options, err = p.parseOptions(value)
 
+	if len(value) > 0 && len(name) == 0 && len(options) == 0 {
+		name = value
+	}
+
 	return
 }
 
