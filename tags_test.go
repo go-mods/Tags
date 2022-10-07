@@ -142,11 +142,11 @@ func TestExample(t *testing.T) {
 		// parse it
 		tgs, err := tags.Parse(string(tag))
 		if err != nil {
-			panic(err)
+			t.Errorf("Parse() error = %v", err)
 		}
 
 		// iterate over all tags
-		fmt.Println(fmt.Sprintf("// Tags for field: %s", field.Name))
+		fmt.Printf("// Tags for field: %s", field.Name)
 		for _, t := range tgs {
 			out, _ := json.Marshal(t)
 			fmt.Println(string(out))
@@ -174,5 +174,4 @@ func TestLookup(t *testing.T) {
 	if tags.Lookup(reflect.TypeOf(Employee{}).Field(1), "xml") == nil {
 		t.Error("Lookup() got = nil")
 	}
-
 }
