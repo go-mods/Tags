@@ -1,3 +1,3 @@
 module github.com/go-mods/tags
 
-go 1.19
+go 1.20
