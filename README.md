@@ -1,5 +1,9 @@
 # Tags
 
+[![GoDoc](https://godoc.org/github.com/go-mods/tags?status.svg)](https://godoc.org/github.com/go-mods/tags)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-mods/tags)](https://goreportcard.com/report/github.com/go-mods/tags)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/go-mods/tags/blob/master/LICENSE)
+
 A simple tags parser for golang's struct
 
 ## Install
