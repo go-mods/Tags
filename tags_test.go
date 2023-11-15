@@ -15,8 +15,10 @@ var simpleTagTest = []struct {
 }{
 	{"", "", ""},
 	{"json:\"id,omitempty\"", "json", "id,omitempty"},
+	{"json:\",omitempty\"", "json", ",omitempty"},
 	{"json:\"-\"", "json", "-"},
 	{"gorm:\"embedded;embeddedPrefix:author_\"", "gorm", "embedded;embeddedPrefix:author_"},
+	{"gorm:\",embedded;embeddedPrefix:author_\"", "gorm", ",embedded;embeddedPrefix:author_"},
 	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "gorm", "constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"},
 }
 
@@ -25,14 +27,17 @@ var simpleValueTest = []struct {
 	name    string
 	options []*tags.Option
 }{
+	{"test:\"key\"", "key", nil},
+	{"test:\"key:value\"", "", []*tags.Option{{Key: "key", Value: "value"}}},
+	{"test:\"key1:value1,key2:value2\"", "", []*tags.Option{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}}},
+	{"test:\"key1:value1;key2:value2\"", "", []*tags.Option{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}}},
 	{"json:\"id\"", "id", nil},
 	{"json:\"id,omitempty\"", "id", []*tags.Option{{Key: "omitempty"}}},
 	{"json:\",omitempty\"", "", []*tags.Option{{Key: "omitempty"}}},
 	{"json:\"id,omitempty,default\"", "id", []*tags.Option{{Key: "omitempty"}, {Key: "default"}}},
 	{"gorm:\"embedded;embeddedPrefix:author_\"", "embedded", []*tags.Option{{Key: "embeddedPrefix", Value: "author_"}}},
-	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "", []*tags.Option{{Key: "constraint", Value: "OnUpdate:CASCADE"}, {Key: "OnDelete", Value: "SET NULL;"}}},
-	{"test:\"key:value\"", "", []*tags.Option{{Key: "key", Value: "value"}}},
-	{"test:\"key1:value1,key2:value2\"", "", []*tags.Option{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}}},
+	{"gorm:\",embedded;embeddedPrefix:author_\"", "", []*tags.Option{{Key: "embedded"}, {Key: "embeddedPrefix", Value: "author_"}}},
+	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "", []*tags.Option{{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL"}}},
 }
 
 var complexTagTest = struct {
@@ -55,10 +60,8 @@ var complexTagTest = struct {
 			Tag:   "gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"",
 			Key:   "gorm",
 			Value: "constraint:OnUpdate:CASCADE,OnDelete:SET NULL;",
-			Name:  "constraint",
 			Options: []*tags.Option{
-				{Key: "OnUpdate", Value: "CASCADE"},
-				{Key: "OnDelete", Value: "SET NULL;"},
+				{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL"},
 			},
 		},
 	},
@@ -89,27 +92,25 @@ func TestSimpleValue(t *testing.T) {
 		tgs, err := tags.Parse(test.tag)
 
 		if err == nil && tgs != nil {
-			if tgs[0].Tag != test.tag {
-				t.Errorf("Parse() got = %v, want %v", tgs[0].Tag, test.tag)
+			for i, tag := range tgs {
+				if tag.Tag != tgs[i].Tag {
+					t.Errorf("Parse() got = %v, want %v", tgs[0].Tag, test.tag)
+				}
+				if tag.Name != tgs[i].Name {
+					t.Errorf("Parse() got = %v, want %v", tgs[0].Name, test.name)
+				}
+				if len(tag.Options) != len(tgs[i].Options) {
+					t.Errorf("Parse() got = %v, want %v", len(tgs[0].Options), len(test.options))
+				}
+				for i, opt := range tgs[0].Options {
+					if opt.Key != test.options[i].Key {
+						t.Errorf("Parse() got = %v, want %v", opt.Key, test.options[i].Key)
+					}
+					if opt.Value != test.options[i].Value {
+						t.Errorf("Parse() got = %v, want %v", opt.Value, test.options[i].Value)
+					}
+				}
 			}
-			if tgs[0].Name != test.name {
-				t.Errorf("Parse() got = %v, want %v", tgs[0].Key, test.name)
-			}
-			if test.options != nil {
-				if len(test.options) >= 1 && tgs[0].Options[0].Key != test.options[0].Key {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[0].Key, test.options[0].Key)
-				}
-				if len(test.options) >= 1 && tgs[0].Options[0].Value != test.options[0].Value {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[0].Value, test.options[0].Value)
-				}
-				if len(test.options) >= 2 && tgs[0].Options[1].Key != test.options[1].Key {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[1], test.options[1])
-				}
-				if len(test.options) >= 2 && tgs[0].Options[1].Value != test.options[1].Value {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Options[1], test.options[1])
-				}
-			}
-
 		} else if err != nil {
 			t.Errorf("Parse() error = %v", err)
 		}
@@ -117,10 +118,37 @@ func TestSimpleValue(t *testing.T) {
 }
 
 func TestComplexTag(t *testing.T) {
-	_, err := tags.Parse(complexTagTest.str)
+	tgs, err := tags.Parse(complexTagTest.str)
 
-	if err != nil {
-		t.Errorf("Parse() error = %v", err)
+	if err == nil && tgs != nil {
+		if len(tgs) != len(complexTagTest.tags) {
+			t.Errorf("Parse() got = %v, want %v", len(tgs), len(complexTagTest.tags))
+		}
+		for i, tag := range tgs {
+			if tag.Tag != complexTagTest.tags[i].Tag {
+				t.Errorf("Parse() got = %v, want %v", tag.Tag, complexTagTest.tags[i].Tag)
+			}
+			if tag.Key != complexTagTest.tags[i].Key {
+				t.Errorf("Parse() got = %v, want %v", tag.Key, complexTagTest.tags[i].Key)
+			}
+			if tag.Value != complexTagTest.tags[i].Value {
+				t.Errorf("Parse() got = %v, want %v", tag.Value, complexTagTest.tags[i].Value)
+			}
+			if tag.Name != complexTagTest.tags[i].Name {
+				t.Errorf("Parse() got = %v, want %v", tag.Name, complexTagTest.tags[i].Name)
+			}
+			if len(tag.Options) != len(complexTagTest.tags[i].Options) {
+				t.Errorf("Parse() got = %v, want %v", len(tag.Options), len(complexTagTest.tags[i].Options))
+			}
+			for j, opt := range tag.Options {
+				if opt.Key != complexTagTest.tags[i].Options[j].Key {
+					t.Errorf("Parse() got = %v, want %v", opt.Key, complexTagTest.tags[i].Options[j].Key)
+				}
+				if opt.Value != complexTagTest.tags[i].Options[j].Value {
+					t.Errorf("Parse() got = %v, want %v", opt.Value, complexTagTest.tags[i].Options[j].Value)
+				}
+			}
+		}
 	}
 }
 

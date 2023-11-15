@@ -117,45 +117,60 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 	// cleanup
 	option = strings.TrimSpace(option)
 
-	// option with only one key (no value)
-	// ie: omitempty from json:"id,omitempty"
-	regex := *regexp.MustCompile(`^(\w*)$`)
-	matches := regex.FindAllStringSubmatch(option, -1)
-	if len(matches) == 1 {
-		o := Option{
-			Key: matches[0][1],
-		}
-		options = append(options, &o)
-		return
-	}
+	// Split options onto multiples options
+	// ie: embedded;embeddedPrefix:author_ from gorm:"embedded;embeddedPrefix:author_"
+	// to embedded and embeddedPrefix:author_
+	// key: embedded, value: nil
+	// key: embeddedPrefix, value: author_
+	//for _, ops := range strings.FieldsFunc(option, split) {
+	for _, ops := range strings.Split(option, ";") {
 
-	// option with only keys (no value)
-	// ie: omitempty,default from json:"id,omitempty,default"
-	regex = *regexp.MustCompile(`^(\w*),(\w*)$`)
-	matches = regex.FindAllStringSubmatch(option, -1)
-	if len(matches) == 1 {
-		for i := 1; i < len(matches[0]); i++ {
-			o := &Option{
-				Key: matches[0][i],
-			}
-			options = append(options, o)
+		// ops can be empty
+		if len(ops) == 0 {
+			continue
 		}
-		return
-	}
 
-	// option with keys and values
-	// ie: embeddedPrefix:author_ from gorm:"embedded;embeddedPrefix:author_"
-	// ie: OnUpdate:CASCADE,OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
-	regex = *regexp.MustCompile(`^(\w*):(.*)$`)
-	ops := strings.Split(option, ",")
-	for _, op := range ops {
-		matches = regex.FindAllStringSubmatch(op, -1)
+		// Special case for options like `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+		// which handle multiple values for the same key
+		// ie: OnUpdate:CASCADE and OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
+		regex := *regexp.MustCompile(`^(.*):((\w*):(.*)[,](\w*):(.*))$`)
+		matches := regex.FindAllStringSubmatch(ops, -1)
 		if len(matches) == 1 {
 			o := Option{
 				Key:   matches[0][1],
 				Value: matches[0][2],
 			}
 			options = append(options, &o)
+			continue
+		}
+
+		// Back to normal case
+		for _, op := range strings.Split(ops, ",") {
+			// option with only one key (no value)
+			// ie: omitempty from json:"id,omitempty"
+			regex = *regexp.MustCompile(`^(\w*)$`)
+			matches = regex.FindAllStringSubmatch(op, -1)
+			if len(matches) == 1 {
+				o := Option{
+					Key: matches[0][1],
+				}
+				options = append(options, &o)
+				continue
+			}
+
+			// option with keys and values
+			// ie: embeddedPrefix:author_ from gorm:"embedded;embeddedPrefix:author_"
+			// ie: OnUpdate:CASCADE and OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
+			regex = *regexp.MustCompile(`^(\w*):(.*)$`)
+			matches = regex.FindAllStringSubmatch(op, -1)
+			if len(matches) == 1 {
+				o := Option{
+					Key:   matches[0][1],
+					Value: matches[0][2],
+				}
+				options = append(options, &o)
+				continue
+			}
 		}
 	}
 
