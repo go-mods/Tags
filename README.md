@@ -68,17 +68,4 @@ func main() {
 {"Tag":"json:\"age,omitempty\"","Key":"json","Value":"age,omitempty","Name":"age","Options":[{"Key":"omitempty","Value":""}]}
 {"Tag":"xml:\"age\"","Key":"xml","Value":"age","Name":"age","Options":null}
 {"Tag":"excel:\"column:age\"","Key":"excel","Value":"column:age","Name":"","Options":[{"Key":"column","Value":"age"}]}
-
---- PASS: TestExample (0.00s)
-PASS
-
-
-Process finished with the exit code 0
-
---- PASS: TestExample (0.00s)
-PASS
-
-
-Process finished with the exit code 0
-
 ```
