@@ -38,6 +38,9 @@ var simpleValueTest = []struct {
 	{"gorm:\"embedded;embeddedPrefix:author_\"", "embedded", []*tags.Option{{Key: "embeddedPrefix", Value: "author_"}}},
 	{"gorm:\",embedded;embeddedPrefix:author_\"", "", []*tags.Option{{Key: "embedded"}, {Key: "embeddedPrefix", Value: "author_"}}},
 	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "", []*tags.Option{{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL"}}},
+	{"excel:\"array,split:;\"", "array", []*tags.Option{{Key: "split", Value: ";"}}},
+	{"excel:\"array,split:,;\"", "array", []*tags.Option{{Key: "split", Value: ",;"}}},
+	{"excel:\"array,split:,;|\"", "array", []*tags.Option{{Key: "split", Value: ",;|"}}},
 }
 
 var complexTagTest = struct {
@@ -92,23 +95,21 @@ func TestSimpleValue(t *testing.T) {
 		tgs, err := tags.Parse(test.tag)
 
 		if err == nil && tgs != nil {
-			for i, tag := range tgs {
-				if tag.Tag != tgs[i].Tag {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Tag, test.tag)
+			if len(tgs) != 1 {
+				t.Errorf("Parse() got = %v, want %v", len(tgs), 1)
+			}
+			if tgs[0].Name != test.name {
+				t.Errorf("Parse() got = %v, want %v", tgs[0].Name, test.name)
+			}
+			if len(tgs[0].Options) != len(test.options) {
+				t.Errorf("Parse() got = %v, want %v", len(tgs[0].Options), len(test.options))
+			}
+			for i, opt := range tgs[0].Options {
+				if opt.Key != test.options[i].Key {
+					t.Errorf("Parse() got = %v, want %v", opt.Key, test.options[i].Key)
 				}
-				if tag.Name != tgs[i].Name {
-					t.Errorf("Parse() got = %v, want %v", tgs[0].Name, test.name)
-				}
-				if len(tag.Options) != len(tgs[i].Options) {
-					t.Errorf("Parse() got = %v, want %v", len(tgs[0].Options), len(test.options))
-				}
-				for i, opt := range tgs[0].Options {
-					if opt.Key != test.options[i].Key {
-						t.Errorf("Parse() got = %v, want %v", opt.Key, test.options[i].Key)
-					}
-					if opt.Value != test.options[i].Value {
-						t.Errorf("Parse() got = %v, want %v", opt.Value, test.options[i].Value)
-					}
+				if opt.Value != test.options[i].Value {
+					t.Errorf("Parse() got = %v, want %v", opt.Value, test.options[i].Value)
 				}
 			}
 		} else if err != nil {

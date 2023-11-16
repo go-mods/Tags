@@ -118,12 +118,14 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 	option = strings.TrimSpace(option)
 
 	// Split options onto multiples options
-	// ie: embedded;embeddedPrefix:author_ from gorm:"embedded;embeddedPrefix:author_"
-	// to embedded and embeddedPrefix:author_
+	// ie: embedded;embeddedPrefix:author_
 	// key: embedded, value: nil
 	// key: embeddedPrefix, value: author_
-	//for _, ops := range strings.FieldsFunc(option, split) {
-	for _, ops := range strings.Split(option, ";") {
+	// ie: array,split:;
+	// Name: array
+	// key: split, value: ;
+	regexSplitter := regexp.MustCompile(`(\b);`)
+	for _, ops := range regexSplitter.Split(option, -1) {
 
 		// ops can be empty
 		if len(ops) == 0 {
@@ -133,7 +135,7 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 		// Special case for options like `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 		// which handle multiple values for the same key
 		// ie: OnUpdate:CASCADE and OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
-		regex := *regexp.MustCompile(`^(.*):((\w*):(.*)[,](\w*):(.*))$`)
+		regex := *regexp.MustCompile(`^(.*):((\w*):(.*)[(\\b),](\w*):(.*))$`)
 		matches := regex.FindAllStringSubmatch(ops, -1)
 		if len(matches) == 1 {
 			o := Option{
@@ -145,7 +147,8 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 		}
 
 		// Back to normal case
-		for _, op := range strings.Split(ops, ",") {
+		regexSplitter := regexp.MustCompile(`(\b),`)
+		for _, op := range regexSplitter.Split(ops, -1) {
 			// option with only one key (no value)
 			// ie: omitempty from json:"id,omitempty"
 			regex = *regexp.MustCompile(`^(\w*)$`)
