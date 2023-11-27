@@ -35,7 +35,7 @@ type Tag struct {
 // Option is a simple key, value pair
 type Option struct {
 	Key   string
-	Value string
+	Value any
 }
 
 // HasOption return true if the option is found

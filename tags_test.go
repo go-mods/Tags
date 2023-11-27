@@ -56,8 +56,8 @@ var complexTagTest = struct {
 			Value: "id,omitempty,default",
 			Name:  "id",
 			Options: []*tags.Option{
-				{Key: "omitempty", Value: ""},
-				{Key: "default", Value: ""},
+				{Key: "omitempty", Value: nil},
+				{Key: "default", Value: nil},
 			},
 		},
 		{
