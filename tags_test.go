@@ -37,7 +37,8 @@ var simpleValueTest = []struct {
 	{"json:\"id,omitempty,default\"", "id", []*tags.Option{{Key: "omitempty"}, {Key: "default"}}},
 	{"gorm:\"embedded;embeddedPrefix:author_\"", "embedded", []*tags.Option{{Key: "embeddedPrefix", Value: "author_"}}},
 	{"gorm:\",embedded;embeddedPrefix:author_\"", "", []*tags.Option{{Key: "embedded"}, {Key: "embeddedPrefix", Value: "author_"}}},
-	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "", []*tags.Option{{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL"}}},
+	{"gorm:\"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;\"", "", []*tags.Option{{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL;"}}},
+	{"gorm:\"name;type:varchar(255);not null\"", "name", []*tags.Option{{Key: "type", Value: "varchar(255)"}, {Key: "not null"}}},
 	{"excel:\"array,split:;\"", "array", []*tags.Option{{Key: "split", Value: ";"}}},
 	{"excel:\"array,split:,;\"", "array", []*tags.Option{{Key: "split", Value: ",;"}}},
 	{"excel:\"array,split:,;|\"", "array", []*tags.Option{{Key: "split", Value: ",;|"}}},
@@ -64,7 +65,7 @@ var complexTagTest = struct {
 			Key:   "gorm",
 			Value: "constraint:OnUpdate:CASCADE,OnDelete:SET NULL;",
 			Options: []*tags.Option{
-				{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL"},
+				{Key: "constraint", Value: "OnUpdate:CASCADE,OnDelete:SET NULL;"},
 			},
 		},
 	},

@@ -124,7 +124,7 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 	// ie: array,split:;
 	// Name: array
 	// key: split, value: ;
-	regexSplitter := regexp.MustCompile(`(\b);`)
+	regexSplitter := regexp.MustCompile(`;(\b)`)
 	for _, ops := range regexSplitter.Split(option, -1) {
 
 		// ops can be empty
@@ -135,7 +135,7 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 		// Special case for options like `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 		// which handle multiple values for the same key
 		// ie: OnUpdate:CASCADE and OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
-		regex := *regexp.MustCompile(`^(.*):((\w*):(.*)[(\\b),](\w*):(.*))$`)
+		regex := *regexp.MustCompile(`^(.*):((\w*):(.*)[,](\w*):(.*))$`)
 		matches := regex.FindAllStringSubmatch(ops, -1)
 		if len(matches) == 1 {
 			o := Option{
@@ -147,20 +147,8 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 		}
 
 		// Back to normal case
-		regexSplitter := regexp.MustCompile(`(\b),`)
+		regexSplitter := regexp.MustCompile(`,(\b)`)
 		for _, op := range regexSplitter.Split(ops, -1) {
-			// option with only one key (no value)
-			// ie: omitempty from json:"id,omitempty"
-			regex = *regexp.MustCompile(`^(\w*)$`)
-			matches = regex.FindAllStringSubmatch(op, -1)
-			if len(matches) == 1 {
-				o := Option{
-					Key: matches[0][1],
-				}
-				options = append(options, &o)
-				continue
-			}
-
 			// option with keys and values
 			// ie: embeddedPrefix:author_ from gorm:"embedded;embeddedPrefix:author_"
 			// ie: OnUpdate:CASCADE and OnDelete:SET NULL; from gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
@@ -170,6 +158,18 @@ func (p *parser) parseOptions(option string) (options []*Option, err error) {
 				o := Option{
 					Key:   matches[0][1],
 					Value: matches[0][2],
+				}
+				options = append(options, &o)
+				continue
+			}
+
+			// option with only one key (no value)
+			// ie: omitempty from json:"id,omitempty"
+			regex = *regexp.MustCompile(`^(.*)$`)
+			matches = regex.FindAllStringSubmatch(op, -1)
+			if len(matches) == 1 {
+				o := Option{
+					Key: matches[0][1],
 				}
 				options = append(options, &o)
 				continue
