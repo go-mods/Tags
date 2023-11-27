@@ -60,12 +60,12 @@ func main() {
 {"Tag":"excel:\"id\"","Key":"excel","Value":"id","Name":"id","Options":null}
 
 // Tags for field: Name
-{"Tag":"json:\"name,string\"","Key":"json","Value":"name,string","Name":"name","Options":[{"Key":"string","Value":""}]}
+{"Tag":"json:\"name,string\"","Key":"json","Value":"name,string","Name":"name","Options":[{"Key":"string","Value":null}]}
 {"Tag":"xml:\"name\"","Key":"xml","Value":"name","Name":"name","Options":null}
 {"Tag":"excel:\"name\"","Key":"excel","Value":"name","Name":"name","Options":null}
 
 // Tags for field: Age
-{"Tag":"json:\"age,omitempty\"","Key":"json","Value":"age,omitempty","Name":"age","Options":[{"Key":"omitempty","Value":""}]}
+{"Tag":"json:\"age,omitempty\"","Key":"json","Value":"age,omitempty","Name":"age","Options":[{"Key":"omitempty","Value":null}]}
 {"Tag":"xml:\"age\"","Key":"xml","Value":"age","Name":"age","Options":null}
 {"Tag":"excel:\"column:age\"","Key":"excel","Value":"column:age","Name":"","Options":[{"Key":"column","Value":"age"}]}
 ```
