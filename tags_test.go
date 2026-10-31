@@ -42,6 +42,13 @@ var simpleValueTest = []struct {
 	{"excel:\"array,split:;\"", "array", []*tags.Option{{Key: "split", Value: ";"}}},
 	{"excel:\"array,split:,;\"", "array", []*tags.Option{{Key: "split", Value: ",;"}}},
 	{"excel:\"array,split:,;|\"", "array", []*tags.Option{{Key: "split", Value: ",;|"}}},
+	{"excel:\"First Name\"", "First Name", nil},
+	{"excel:\"Año\"", "Año", nil},
+	{"excel:\"Prénom,default:sans prénom\"", "Prénom", []*tags.Option{{Key: "default", Value: "sans prénom"}}},
+	{"excel:\"Code postal,required\"", "Code postal", []*tags.Option{{Key: "required"}}},
+	{"excel:\"Numéros;split:|\"", "Numéros", []*tags.Option{{Key: "split", Value: "|"}}},
+	{"excel:\"column:Last Name\"", "", []*tags.Option{{Key: "column", Value: "Last Name"}}},
+	{"json:\"-\"", "-", nil},
 }
 
 var complexTagTest = struct {

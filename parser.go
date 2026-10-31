@@ -82,12 +82,13 @@ func (p *parser) parseValue(value string) (name string, options []*Option, err e
 	// cleanup
 	value = strings.TrimSpace(value)
 
-	// value only have a name
+	// value only have a name, made of any character but the option separators , ; and :
 	// ie: id
-	regex := *regexp.MustCompile(`^(\w*)$`)
+	// ie: First Name
+	regex := *regexp.MustCompile(`^([^,;:]*)$`)
 	matches := regex.FindAllStringSubmatch(value, -1)
 	if len(matches) == 1 {
-		name = matches[0][1]
+		name = strings.TrimSpace(matches[0][1])
 		return
 	}
 
@@ -95,10 +96,11 @@ func (p *parser) parseValue(value string) (name string, options []*Option, err e
 	// ie: id,omitempty
 	// ie: id,omitempty,default
 	// ie: embedded;embeddedPrefix:author_
-	regex = *regexp.MustCompile(`^(\w*)[,;](.*)$`)
+	// ie: Prénom,default:anonymous
+	regex = *regexp.MustCompile(`^([^,;:]*)[,;](.*)$`)
 	matches = regex.FindAllStringSubmatch(value, -1)
 	if len(matches) == 1 {
-		name = matches[0][1]
+		name = strings.TrimSpace(matches[0][1])
 		options, err = p.parseOptions(matches[0][2])
 		return
 	}
