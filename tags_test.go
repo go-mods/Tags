@@ -3,9 +3,10 @@ package tags_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-mods/tags"
 	"reflect"
 	"testing"
+
+	"github.com/go-mods/tags"
 )
 
 var simpleTagTest = []struct {
