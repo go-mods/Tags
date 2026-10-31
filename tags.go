@@ -1,52 +1,72 @@
+// Package tags parses Go struct tags and splits each value into a name and options.
+//
+// A value is split with the separators , ; and :
+//
+//   - the name is the part before the first , or ; and may hold spaces and non-ASCII letters (First Name, Año);
+//   - options follow, separated by , or ; and are either a key (omitempty) or a key:value pair (default:anonymous);
+//   - a value holding a : before any , or ; has no name, only options (column:Last Name).
+//
+// A separator belongs to a value when it is not followed by a letter, a digit or an underscore:
+// split:,;| gives the value ",;|". The constraint option keeps its key:value pairs as a single value:
+// constraint:OnUpdate:CASCADE,OnDelete:SET NULL gives the value "OnUpdate:CASCADE,OnDelete:SET NULL".
+//
+// A name cannot hold , ; or :
+//
+// Example usage:
+//
+//	tgs, _ := tags.Parse(`json:"id,omitempty" excel:"First Name,default:anonymous"`)
+//	tgs[1].Name                          // "First Name"
+//	tgs[1].GetOption("default").Value    // "anonymous"
+//
+//	field, _ := reflect.TypeOf(User{}).FieldByName("Name")
+//	tag := tags.Lookup(field, "excel")   // nil when the field has no excel tag
 package tags
 
-// Tag represents a string literal applied to a struct field
-// see: https://pkg.go.dev/reflect#StructTag
+// Tag is one key:"value" pair of a struct tag, see https://pkg.go.dev/reflect#StructTag
 type Tag struct {
-	// Tag is the full string containing the Key, the Name and Options
+	// Tag is the whole pair: json:"id,omitempty"
 	Tag string
 
-	// Key is the tag key which can be obtained with func (StructTag) Get
+	// Key is the tag key, as given to StructTag.Get
 	// in `json:"id,omitempty"`, the Key is "json"
 	// in `gorm:"embedded;embeddedPrefix:author_"`, the Key is "gorm"
-	// in `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`, the Key is "gorm"
 	Key string
 
-	// Value is obtained with func (StructTag) Lookup
+	// Value is the tag value, as returned by StructTag.Get
 	// in `json:"id,omitempty"`, the Value is "id,omitempty"
 	// in `gorm:"embedded;embeddedPrefix:author_"`, the Value is "embedded;embeddedPrefix:author_"
-	// in `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`, the Value is "constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"
 	Value string
 
-	// Name is the first part of the value obtained with func (StructTag) Lookup
-	// in `json:"id,omitempty"`, the key Name "id"
+	// Name is the first part of the value, before the first , or ;
+	// in `json:"id,omitempty"`, the Name is "id"
 	// in `gorm:"embedded;embeddedPrefix:author_"`, the Name is "embedded"
-	// in `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`, the Name is "constraint"
+	// in `excel:"column:Last Name"`, the Name is "" (the value holds options only)
 	Name string
 
-	// Options are the second part of the value obtained with func (StructTag) Lookup
-	// Options is a list of options (Key, Value pair)
-	// in `json:"id,omitempty"`, the Options is ["omitempty"]
-	// in `gorm:"embedded;embeddedPrefix:author_"`, the Options is ["embeddedPrefix:author_"]
-	// in `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`, the Options is ["OnUpdate:CASCADE", "OnDelete:SET NULL;"]
+	// Options are the parts of the value after the Name
+	// in `json:"id,omitempty"`, the Options are [omitempty]
+	// in `gorm:"embedded;embeddedPrefix:author_"`, the Options are [embeddedPrefix:author_]
+	// in `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`, the Options are
+	// [constraint:OnUpdate:CASCADE,OnDelete:SET NULL;] and the Name is ""
 	Options []*Option
 }
 
-// Option is a simple key, value pair
+// Option is an option of a tag value
 type Option struct {
-	Key   string
+	// Key is the option name: omitempty, default
+	Key string
+	// Value is the string after the first : of the option, or nil when the option has no value
 	Value any
 }
 
-// HasOption return true if the option is found
-func (tags *Tag) HasOption(option string) bool {
-	return tags.GetOption(option) != nil
+// HasOption reports whether the tag has the option
+func (t *Tag) HasOption(option string) bool {
+	return t.GetOption(option) != nil
 }
 
-// GetOption return the option or nil
-func (tags *Tag) GetOption(option string) *Option {
-
-	for _, tagOption := range tags.Options {
+// GetOption returns the first option with this key, or nil
+func (t *Tag) GetOption(option string) *Option {
+	for _, tagOption := range t.Options {
 		if tagOption.Key == option {
 			return tagOption
 		}
